@@ -21,6 +21,9 @@ class Transition;
 
 class Tape {
 public:
+    
+    const static char EMPTY = ' ';
+    
     Tape(const string &);
     virtual ~Tape();
     
@@ -34,7 +37,6 @@ private:
     vector<char> left_;
     vector<char> right_;
     char current_;
-    const char EMPTY = ' ';
 };
 
 class State {
@@ -50,6 +52,8 @@ public:
     bool is_there_transition(const char &input);
     Transition* find_transition(const char &input);
     friend ostream& operator<<(ostream&, State&);
+    friend bool operator== (const State &s, const State &another);
+    friend bool operator!= (const State &s, const State &another);
 };
 
 class Transition {

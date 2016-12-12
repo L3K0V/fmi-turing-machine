@@ -10,6 +10,9 @@
 
 #include <algorithm>
 
+const char Tape::EMPTY;
+const static State HALT("halt");
+
 Tape::Tape(const string &input) {
     right_.push_back(EMPTY);
     for (int e = (int) (input.length() - 1); e >= 0; --e) {
@@ -49,16 +52,16 @@ char Tape::read() const {
 
 ostream& operator<<(ostream& out, Tape &tape) {
     for (vector<char>::iterator it = tape.right_.begin() ; it != tape.right_.end(); ++it) {
-        if ((*it) != ' ') {
+        if ((*it) != Tape::EMPTY) {
             out << *it;
         }
     }
     
-    if (tape.current_ != ' ')
+    if (tape.current_ != Tape::EMPTY)
         out << tape.current_;
     
     for (vector<char>::iterator it = tape.left_.end(); it != tape.left_.begin(); --it) {
-        if ((*it) != ' ') {
+        if ((*it) != Tape::EMPTY) {
             out << *it;
         }
     }
@@ -101,6 +104,14 @@ string State::get_name() const {
 ostream& operator<<(ostream& out, State &state) {
     out << state.name_ << " with " << state.transitions_.size() << " transitions" << endl;
     return out;
+}
+
+bool operator== (const State &s, const State &another) {
+    return s.name_.compare(another.name_) == 0 && s.transitions_.size() == another.transitions_.size();
+}
+
+bool operator!= (const State &s, const State &another) {
+    return !(s == another);
 }
 
 Transition::Transition(char read, char write, char command, State* state) :
@@ -185,7 +196,7 @@ void TuringMachine::step() {
 }
 
 void TuringMachine::run() {
-    while(current_->get_name().compare("halt") != 0) {
+    while(*current_ != HALT) {
         step();
     }
 }
