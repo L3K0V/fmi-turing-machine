@@ -25,7 +25,6 @@ public:
     const static char EMPTY = ' ';
     
     Tape(const string &);
-    virtual ~Tape();
     
     void move_left();
     void move_right();
@@ -45,7 +44,6 @@ private:
     vector<Transition*> transitions_;
 public:
     State(const string &name);
-    virtual ~State();
     
     string get_name() const;
     void add_transition(Transition *trans);
@@ -64,7 +62,6 @@ private:
     State* state_;
 public:
     Transition(char, char, char, State*);
-    ~Transition();
     
     char get_command() const;
     char get_write_symbol() const;
@@ -75,14 +72,13 @@ public:
 
 class TuringMachine {
 private:
-    vector<State*> states_;
+    vector<unique_ptr<State>> states_;
     State* current_;
     Tape tape_;
 public:
     TuringMachine(const string&, State*);
-    ~TuringMachine();
     
-    void add_state(State*);
+    void add_state(unique_ptr<State>);
     State* find_state(const string&);
     bool is_there_state(const string&);
     

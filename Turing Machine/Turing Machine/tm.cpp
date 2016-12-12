@@ -22,8 +22,6 @@ Tape::Tape(const string &input) {
     right_.pop_back();
 }
 
-Tape::~Tape() {}
-
 void Tape::move_left() {
     right_.push_back(current_);
     if (left_.empty()) {
@@ -71,8 +69,6 @@ ostream& operator<<(ostream& out, Tape &tape) {
 
 State::State(const string &name) : name_(name) {}
 
-State::~State() {}
-
 void State::add_transition(Transition *trans) {
     transitions_.push_back(trans);
 }
@@ -118,8 +114,6 @@ Transition::Transition(char read, char write, char command, State* state) :
     read_(read), write_(write), command_(command), state_(state)
 {}
 
-Transition::~Transition() {}
-
 char Transition::get_command() const {
     return command_;
 }
@@ -145,31 +139,28 @@ TuringMachine::TuringMachine(const string &input, State *start) :
     tape_(Tape(input)), current_(start)
 {}
 
-TuringMachine::~TuringMachine() {}
-
-void TuringMachine::add_state(State *state) {
-    states_.push_back(state);
+void TuringMachine::add_state(unique_ptr<State> state) {
+    states_.push_back(move(state));
 }
 
-bool TuringMachine::is_there_state(const string &name) {
-    for (vector<State*>::iterator it = states_.begin() ; it != states_.end(); ++it) {
-        State *s = *it;
-        if (s->get_name().compare(name) == 0) {
+bool TuringMachine::is_there_state(const string &name) {    
+    for(const auto& state : states_) {
+        if (state->get_name().compare(name) == 0) {
             return true;
         }
+        
     }
     
     throw false;
 }
 
 State* TuringMachine::find_state(const string &name) {
-    for (vector<State*>::iterator it = states_.begin() ; it != states_.end(); ++it) {
-        State *s = *it;
-        if (s->get_name().compare(name) == 0) {
-            return s;
+    for(const auto& state : states_) {
+        if (state->get_name().compare(name) == 0) {
+            return state.get();
         }
+
     }
-    
     return nullptr;
 }
 
