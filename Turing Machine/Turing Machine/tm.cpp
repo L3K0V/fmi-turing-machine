@@ -143,7 +143,7 @@ void TuringMachine::add_state(unique_ptr<State> state) {
     states_.push_back(move(state));
 }
 
-bool TuringMachine::is_there_state(const string &name) {    
+bool TuringMachine::is_there_state(const string &name) const {
     for(const auto& state : states_) {
         if (state->get_name().compare(name) == 0) {
             return true;
@@ -152,6 +152,10 @@ bool TuringMachine::is_there_state(const string &name) {
     }
     
     throw false;
+}
+
+bool TuringMachine::is_finished_successfuly() const {
+    return current_ != nullptr && current_->get_name().compare("halt") == 0;
 }
 
 State* TuringMachine::find_state(const string &name) {
@@ -169,6 +173,12 @@ void TuringMachine::step() {
     cout << *current_;
     
     Transition *next = current_->find_transition(tape_.read());
+   
+    
+    if (nullptr == next) {
+        current_ = nullptr;
+        return;
+    }
     
     cout << *next;
     
@@ -183,11 +193,11 @@ void TuringMachine::step() {
             break;
     }
     
-    current_ = next->get_next_state();
+     current_ = next->get_next_state();
 }
 
 void TuringMachine::run() {
-    while(*current_ != HALT) {
+    while(nullptr != current_ && *current_ != HALT) {
         step();
     }
 }

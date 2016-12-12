@@ -43,6 +43,7 @@ int main(int argc, const char * argv[]) {
     m.print();
     m.run();
     m.print();
+    cout << "Finish successful: " << m.is_finished_successfuly() << endl;
     
     return 0;
 }

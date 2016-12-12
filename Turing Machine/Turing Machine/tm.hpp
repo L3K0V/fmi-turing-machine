@@ -80,7 +80,8 @@ public:
     
     void add_state(unique_ptr<State>);
     State* find_state(const string&);
-    bool is_there_state(const string&);
+    bool is_there_state(const string&) const;
+    bool is_finished_successfuly() const;
     
     void step();
     void run();
