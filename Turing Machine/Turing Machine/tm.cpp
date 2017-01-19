@@ -14,10 +14,8 @@
 #include <regex>
 
 const char Tape::EMPTY;
-const static State HALT("halt");
 
 Tape::Tape(const string &input) {
-    right_.push_back(EMPTY);
     for (int e = (int) (input.length() - 1); e >= 0; --e) {
         right_.push_back(input[e]);
     }
@@ -52,69 +50,32 @@ char Tape::read() const {
 }
 
 ostream& operator<<(ostream& out, Tape &tape) {
-    for (vector<char>::iterator it = tape.right_.begin() ; it != tape.right_.end(); ++it) {
+   
+    for (vector<char>::iterator it = tape.left_.begin(); it != tape.left_.end(); ++it) {
         if ((*it) != Tape::EMPTY) {
             out << *it;
+            out.flush();
         }
     }
-    
-    if (tape.current_ != Tape::EMPTY)
+
+    if (tape.current_ != Tape::EMPTY) {
         out << tape.current_;
-    
-    for (vector<char>::iterator it = tape.left_.end(); it != tape.left_.begin(); --it) {
+        out.flush();
+    }
+
+    for (vector<char>::reverse_iterator it = tape.right_.rbegin(); it != tape.right_.rend(); ++it) {
         if ((*it) != Tape::EMPTY) {
             out << *it;
+            out.flush();
         }
     }
-    
     return out;
 }
 
-State::State(const string &name) : name_(name) {}
 
-void State::add_transition(unique_ptr<Transition> trans) {
-    transitions_.push_back(move(trans));
-}
 
-bool State::is_there_transition(const char &input) {
-    for (vector<unique_ptr<Transition>>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
-        if ((*it).get()->get_read_symbol() == input) {
-            return true;
-        }
-    }
-    return false;
-}
-
-Transition* State::find_transition(const char &input) {
-    for (vector<unique_ptr<Transition>>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
-        Transition *t = (*it).get();
-        if (t->get_read_symbol() == input) {
-            return t;
-        }
-    }
-    
-    return nullptr;
-}
-
-string State::get_name() const {
-    return name_;
-}
-
-ostream& operator<<(ostream& out, State &state) {
-    out << state.name_ << " with " << state.transitions_.size() << " transitions" << endl;
-    return out;
-}
-
-bool operator== (const State &s, const State &another) {
-    return s.name_.compare(another.name_) == 0 && s.transitions_.size() == another.transitions_.size();
-}
-
-bool operator!= (const State &s, const State &another) {
-    return !(s == another);
-}
-
-Transition::Transition(char read, char write, char command, State* state) :
-    read_(read), write_(write), command_(command), state_(state)
+Transition::Transition(const string& current_state, char read, char write, char command, const string& next_state) :
+    current_state_(current_state), read_(read), write_(write), command_(command), next_state_(next_state)
 {}
 
 char Transition::get_command() const {
@@ -129,50 +90,62 @@ char Transition::get_write_symbol() const {
     return write_;
 }
 
-State* Transition::get_next_state() {
-    return state_;
+string Transition::get_next_state() const {
+    return next_state_;
+}
+
+string Transition::get_current_state() const {
+    return current_state_;
+}
+
+void Transition::change_next_state(const string& next_state) {
+    next_state_ = next_state;
 }
 
 ostream& operator<<(ostream& out, Transition &transition) {
-    out << transition.read_ << "/" << transition.get_write_symbol() << "," << transition.command_ << endl;
+    out << transition.read_ << "{" << transition.current_state_ << "} -> " << transition.write_ << "{" << transition.next_state_ << "}" << transition.command_;
     return out;
 }
 
-TuringMachine::TuringMachine(const string &input, State *start) :
-current_(start) {
-    tapes_.push_back(Tape(input));
-}
-
-TuringMachine::TuringMachine()
+TuringMachine::TuringMachine() : current_state_("halt")
 {}
 
-void TuringMachine::add_state(unique_ptr<State> state) {
-    states_.push_back(move(state));
+void TuringMachine::add_tape(Tape tape) {
+    tapes_.push_back(tape);
 }
 
-bool TuringMachine::is_there_state(const string &name) const {
-    for(const auto& state : states_) {
-        if (state->get_name().compare(name) == 0) {
-            return true;
+void TuringMachine::start_state(const string& state) {
+    current_state_ = state;
+}
+
+void TuringMachine::add_transition(unique_ptr<Transition> transition) {
+            
+    mapping_[transition.get()->get_current_state()].push_back(std::move(transition));
+}
+
+Transition* TuringMachine::find_transition(const char &input) {
+    
+    const auto& transitions = mapping_[current_state_];
+    
+    for (const auto& transition : transitions) {
+        if (transition->get_read_symbol() == input) {
+            return transition.get();
         }
-        
     }
     
-    throw false;
+    return nullptr;
+}
+
+vector<string> TuringMachine::get_states() {
+    vector<string> keys;
+    
+    for(auto const& imap: mapping_)
+        keys.push_back(imap.first);
+    return keys;
 }
 
 bool TuringMachine::is_finished_successfuly() const {
-    return current_ != nullptr && current_->get_name().compare(HALT.get_name()) == 0;
-}
-
-State* TuringMachine::find_state(const string &name) {
-    for(const auto& state : states_) {
-        if (state->get_name().compare(name) == 0) {
-            return state.get();
-        }
-
-    }
-    return nullptr;
+    return current_state_.compare("halt") == 0;
 }
 
 TuringMachine TuringMachine::load_machine(const string &filename) {
@@ -198,25 +171,7 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
             
             ss >> read_symbol >> old_state >> write_symbol >> new_state >> command;
             
-            State *old_state_ptr;
-            State *new_state_ptr;
-            
-            // If state exist get it, otherwise add new and use it.
-            if (tm.find_state(old_state) == nullptr) {
-                old_state_ptr = new State(old_state);
-                tm.add_state(std::unique_ptr<State>(old_state_ptr));
-            } else {
-                old_state_ptr = tm.find_state(old_state);
-            }
-            
-            if (tm.find_state(new_state) == nullptr) {
-                new_state_ptr = new State(new_state);
-                tm.add_state(std::unique_ptr<State>(new_state_ptr));
-            } else {
-                new_state_ptr = tm.find_state(new_state);
-            }
-            
-            old_state_ptr->add_transition(unique_ptr<Transition>(new Transition(read_symbol, write_symbol, command, new_state_ptr)));
+            tm.add_transition(unique_ptr<Transition>(new Transition(old_state, read_symbol, write_symbol, command, new_state)));
         }
         ifs.close();
     }
@@ -224,29 +179,29 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
     return tm;
 }
 
-TuringMachine* loop_over(TuringMachine* machine, Transition* loop) {
-    State* halt_state = machine->find_state(HALT.get_name());
+void TuringMachine::loop_over(const string& loop, Transition* halt) {
     
-    if (halt_state != nullptr) {
-        halt_state->add_transition(unique_ptr<Transition>(loop));
+    std::vector<int> vints;
+    
+    for(auto const& state: get_states()) {
+        for (auto const& transition: mapping_[state]) {
+            if (transition->get_next_state().compare("halt") == 0) {
+                transition->change_next_state(loop);
+            }
+        }
     }
     
-    return machine;
+    add_transition(unique_ptr<Transition>(halt));
 }
 
 void TuringMachine::step() {
     
-    cout << *current_;
-    
-    Transition *next = current_->find_transition(tapes_[0].read());
-   
+    Transition *next = find_transition(tapes_[0].read());
     
     if (nullptr == next) {
-        current_ = nullptr;
+        current_state_ = "";
         return;
     }
-    
-    cout << *next;
     
     tapes_[0].write(next->get_write_symbol());
     
@@ -259,11 +214,11 @@ void TuringMachine::step() {
             break;
     }
     
-     current_ = next->get_next_state();
+     current_state_ = next->get_next_state();
 }
 
 void TuringMachine::run() {
-    while(nullptr != current_ && *current_ != HALT) {
+    while(current_state_ != "" && current_state_ != "halt") {
         step();
     }
 }

@@ -9,7 +9,7 @@
 #include "catch.hpp"
 #include "tm.hpp"
 
-SCENARIO("Navigate trhough tape", "[tape]") {
+SCENARIO("Navigate trhough tape") {
     GIVEN("Tape with some initial data") {
         Tape t("123");
         
@@ -27,5 +27,46 @@ SCENARIO("Navigate trhough tape", "[tape]") {
                 REQUIRE( t.read() == '1');
             }
         }
+        
+        WHEN("Move tape right 3 times") {
+            t.move_right();
+            t.move_right();
+            t.move_right();
+            
+            AND_THEN("Current value must be empty") {
+                REQUIRE( t.read() == ' ');
+            }
+        }
+    }
+}
+
+SCENARIO("Change values of tape") {
+    GIVEN("Tape with some initial data") {
+        Tape t("42");
+        
+        WHEN("We change initial value to X") {
+            
+            t.write('X');
+            
+            THEN("Value must be X") {
+                REQUIRE( t.read() == 'X');
+            }
+            
+            AND_THEN("We change the last value to X") {
+                t.move_right();
+                t.write('X');
+                
+                WHEN("We checked current value must be X") {
+                    REQUIRE(t.read() == 'X');
+                    
+                    AND_WHEN("We go left and check initial value also must be X") {
+                        t.move_left();
+                        
+                        REQUIRE(t.read() == 'X');
+                    }
+                }
+            }
+        }
+        
     }
 }

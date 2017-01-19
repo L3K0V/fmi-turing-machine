@@ -11,12 +11,12 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <iostream>
 
 using namespace std;
 
 class Tape;
-class State;
 class Transition;
 
 class Tape {
@@ -38,53 +38,48 @@ private:
     char current_;
 };
 
-class State {
-private:
-    string name_;
-    vector<unique_ptr<Transition>> transitions_;
-public:
-    State(const string &name);
-    
-    string get_name() const;
-    void add_transition(unique_ptr<Transition>);
-    bool is_there_transition(const char &input);
-    Transition* find_transition(const char &input);
-    friend ostream& operator<<(ostream&, State&);
-    friend bool operator== (const State &s, const State &another);
-    friend bool operator!= (const State &s, const State &another);
-};
-
 class Transition {
 private:
     char read_;
     char write_;
     char command_;
-    State* state_;
+    string current_state_;
+    string next_state_;
 public:
-    Transition(char, char, char, State*);
+    Transition(const string& current_state, char, char, char, const string& next_state);
     
     char get_command() const;
     char get_write_symbol() const;
     char get_read_symbol() const;
-    State* get_next_state();
+    string get_next_state() const;
+    string get_current_state() const;
+    
+    void change_next_state(const string&);
+    
     friend ostream& operator<<(ostream&, Transition&);
 };
 
 class TuringMachine {
 private:
-    vector<unique_ptr<State>> states_;
+    map<string, vector<unique_ptr<Transition>>> mapping_;
     vector<Tape> tapes_;
-    State* current_;
-public:
-    TuringMachine(const string&, State*);
-    TuringMachine();
+    string current_state_;
     
-    void add_state(unique_ptr<State>);
-    State* find_state(const string&);
-    bool is_there_state(const string&) const;
+    Transition* find_transition(const char &input);
+public:
+    TuringMachine();
+
+    void add_tape(Tape);
+    void start_state(const string&);
+    
+    vector<string> get_states();
+    
     bool is_finished_successfuly() const;
+   
     static TuringMachine load_machine(const string&);
-    static TuringMachine* while_over(TuringMachine*, Transition*);
+    void loop_over(const string&, Transition*);
+    
+    void add_transition(unique_ptr<Transition>);
     
     void step();
     void run();

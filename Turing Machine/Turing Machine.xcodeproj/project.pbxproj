@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F50316E61E30E2BF00FF2D2E /* testMachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50316E51E30E2BF00FF2D2E /* testMachine.cpp */; };
+		F50316E71E31042200FF2D2E /* tm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5FE37621DFDF0F4006234B2 /* tm.cpp */; };
 		F561D89B1DF98F3D0085009D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D89A1DF98F3D0085009D /* main.cpp */; };
 		F561D8AB1DF9B5EC0085009D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D8AA1DF9B5EC0085009D /* main.cpp */; };
 		F561D8B21DF9B6E10085009D /* testTape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D8B11DF9B6E10085009D /* testTape.cpp */; };
@@ -192,6 +193,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F50316E71E31042200FF2D2E /* tm.cpp in Sources */,
 				F561D8B21DF9B6E10085009D /* testTape.cpp in Sources */,
 				F561D8AB1DF9B5EC0085009D /* main.cpp in Sources */,
 				F50316E61E30E2BF00FF2D2E /* testMachine.cpp in Sources */,
