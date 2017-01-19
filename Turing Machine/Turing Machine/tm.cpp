@@ -54,19 +54,16 @@ ostream& operator<<(ostream& out, Tape &tape) {
     for (vector<char>::iterator it = tape.left_.begin(); it != tape.left_.end(); ++it) {
         if ((*it) != Tape::EMPTY) {
             out << *it;
-            out.flush();
         }
     }
 
     if (tape.current_ != Tape::EMPTY) {
         out << tape.current_;
-        out.flush();
     }
 
     for (vector<char>::reverse_iterator it = tape.right_.rbegin(); it != tape.right_.rend(); ++it) {
         if ((*it) != Tape::EMPTY) {
             out << *it;
-            out.flush();
         }
     }
     return out;
@@ -110,8 +107,16 @@ ostream& operator<<(ostream& out, Transition &transition) {
 TuringMachine::TuringMachine() : current_state_("halt")
 {}
 
-void TuringMachine::add_tape(Tape tape) {
-    tapes_.push_back(tape);
+void TuringMachine::add_tape(unique_ptr<Tape> tape) {
+    tapes_.push_back(std::move(tape));
+}
+
+Tape* TuringMachine::get_tape(int index) {
+    return tapes_[index].get();
+}
+
+void TuringMachine::remove_tape(int index) {
+    tapes_.erase(tapes_.begin() + 1);
 }
 
 void TuringMachine::start_state(const string& state) {
@@ -196,21 +201,21 @@ void TuringMachine::loop_over(const string& loop, Transition* halt) {
 
 void TuringMachine::step() {
     
-    Transition *next = find_transition(tapes_[0].read());
+    Transition *next = find_transition(tapes_[0]->read());
     
     if (nullptr == next) {
         current_state_ = "";
         return;
     }
     
-    tapes_[0].write(next->get_write_symbol());
+    tapes_[0]->write(next->get_write_symbol());
     
     switch (next->get_command()) {
         case 'R':
-            tapes_[0].move_right();
+            tapes_[0]->move_right();
             break;
         case 'L':
-            tapes_[0].move_left();
+            tapes_[0]->move_left();
             break;
     }
     
@@ -224,5 +229,5 @@ void TuringMachine::run() {
 }
 
 void TuringMachine::print() {
-    cout << tapes_[0] << endl;
+    cout << *tapes_[0] << endl;
 }

@@ -62,14 +62,16 @@ public:
 class TuringMachine {
 private:
     map<string, vector<unique_ptr<Transition>>> mapping_;
-    vector<Tape> tapes_;
+    vector<unique_ptr<Tape>> tapes_;
     string current_state_;
     
     Transition* find_transition(const char &input);
 public:
     TuringMachine();
 
-    void add_tape(Tape);
+    void add_tape(unique_ptr<Tape>);
+    Tape* get_tape(int index);
+    void remove_tape(int index);
     void start_state(const string&);
     
     vector<string> get_states();
