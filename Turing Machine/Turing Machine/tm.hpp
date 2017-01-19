@@ -73,15 +73,17 @@ public:
 class TuringMachine {
 private:
     vector<unique_ptr<State>> states_;
+    vector<Tape> tapes_;
     State* current_;
-    Tape tape_;
 public:
     TuringMachine(const string&, State*);
+    TuringMachine();
     
     void add_state(unique_ptr<State>);
     State* find_state(const string&);
     bool is_there_state(const string&) const;
     bool is_finished_successfuly() const;
+    static TuringMachine load_machine(const string&);
     
     void step();
     void run();

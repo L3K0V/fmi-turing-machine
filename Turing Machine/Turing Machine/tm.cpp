@@ -9,6 +9,9 @@
 #include "tm.hpp"
 
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <regex>
 
 const char Tape::EMPTY;
 const static State HALT("halt");
@@ -136,7 +139,11 @@ ostream& operator<<(ostream& out, Transition &transition) {
 }
 
 TuringMachine::TuringMachine(const string &input, State *start) :
-    tape_(Tape(input)), current_(start)
+current_(start) {
+    tapes_.push_back(Tape(input));
+}
+
+TuringMachine::TuringMachine()
 {}
 
 void TuringMachine::add_state(unique_ptr<State> state) {
@@ -168,11 +175,56 @@ State* TuringMachine::find_state(const string &name) {
     return nullptr;
 }
 
+TuringMachine TuringMachine::load_machine(const string &filename) {
+    
+    TuringMachine tm;
+    
+    ifstream ifs(filename, ios::in);
+    
+    if(ifs.is_open()) {
+        string line;
+        regex e("[{}(\\->)]");
+        while (getline(ifs, line)){
+            string replaced = std::regex_replace(line, e, " ");
+            
+            char read_symbol, write_symbol;
+            string old_state, new_state;
+            char command;
+            
+            stringstream ss(replaced);
+            
+            ss >> read_symbol >> old_state >> write_symbol >> new_state >> command;
+            
+            State *old_state_ptr;
+            State *new_state_ptr;
+            
+            if (tm.find_state(old_state) == nullptr) {
+                old_state_ptr = new State(old_state);
+                tm.add_state(std::unique_ptr<State>(old_state_ptr));
+            } else {
+                old_state_ptr = tm.find_state(old_state);
+            }
+            
+            if (tm.find_state(new_state) == nullptr) {
+                new_state_ptr = new State(new_state);
+                tm.add_state(std::unique_ptr<State>(new_state_ptr));
+            } else {
+                new_state_ptr = tm.find_state(new_state);
+            }
+            
+            old_state_ptr->add_transition(new Transition(read_symbol, write_symbol, command, new_state_ptr));
+        }
+        ifs.close();
+    }
+    
+    return tm;
+}
+
 void TuringMachine::step() {
     
     cout << *current_;
     
-    Transition *next = current_->find_transition(tape_.read());
+    Transition *next = current_->find_transition(tapes_[0].read());
    
     
     if (nullptr == next) {
@@ -182,14 +234,14 @@ void TuringMachine::step() {
     
     cout << *next;
     
-    tape_.write(next->get_write_symbol());
+    tapes_[0].write(next->get_write_symbol());
     
     switch (next->get_command()) {
         case 'R':
-            tape_.move_right();
+            tapes_[0].move_right();
             break;
         case 'L':
-            tape_.move_left();
+            tapes_[0].move_left();
             break;
     }
     
@@ -203,5 +255,5 @@ void TuringMachine::run() {
 }
 
 void TuringMachine::print() {
-    cout << tape_ << endl;
+    cout << tapes_[0] << endl;
 }

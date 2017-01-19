@@ -45,5 +45,8 @@ int main(int argc, const char * argv[]) {
     m.print();
     cout << "Finish successful: " << m.is_finished_successfuly() << endl;
     
+    TuringMachine machine = TuringMachine::load_machine("dummy.txt");
+    cout << machine.find_state("increment") << endl;
+    
     return 0;
 }
