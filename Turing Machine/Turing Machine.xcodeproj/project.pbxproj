@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F50316E61E30E2BF00FF2D2E /* testMachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50316E51E30E2BF00FF2D2E /* testMachine.cpp */; };
 		F561D89B1DF98F3D0085009D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D89A1DF98F3D0085009D /* main.cpp */; };
 		F561D8AB1DF9B5EC0085009D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D8AA1DF9B5EC0085009D /* main.cpp */; };
 		F561D8B21DF9B6E10085009D /* testTape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F561D8B11DF9B6E10085009D /* testTape.cpp */; };
@@ -35,6 +36,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F50316E51E30E2BF00FF2D2E /* testMachine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testMachine.cpp; sourceTree = "<group>"; };
 		F561D8971DF98F3D0085009D /* Turing Machine */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Turing Machine"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F561D89A1DF98F3D0085009D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		F561D8A81DF9B5EC0085009D /* Test Turing Machine */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Test Turing Machine"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -97,6 +99,7 @@
 				F561D8AF1DF9B6220085009D /* catch.hpp */,
 				F561D8AA1DF9B5EC0085009D /* main.cpp */,
 				F561D8B11DF9B6E10085009D /* testTape.cpp */,
+				F50316E51E30E2BF00FF2D2E /* testMachine.cpp */,
 			);
 			path = "Test Turing Machine";
 			sourceTree = "<group>";
@@ -191,6 +194,7 @@
 			files = (
 				F561D8B21DF9B6E10085009D /* testTape.cpp in Sources */,
 				F561D8AB1DF9B5EC0085009D /* main.cpp in Sources */,
+				F50316E61E30E2BF00FF2D2E /* testMachine.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

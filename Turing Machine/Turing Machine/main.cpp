@@ -19,25 +19,25 @@ int main(int argc, const char * argv[]) {
     auto q2 = std::unique_ptr<State>(new State("q2"));
     auto halt = std::unique_ptr<State>(new State("halt"));
     
-    Transition q01('0', ' ', 'R', q1.get());
-    Transition q02('1', ' ', 'R', q2.get());
+    auto q01 = new Transition('0', ' ', 'R', q1.get());
+    auto q02 = new Transition('1', ' ', 'R', q2.get());
     
-    Transition q11('0', '0', 'R', q1.get());
-    Transition q12('1', '0', 'R', q2.get());
+    auto q11 = new Transition('0', '0', 'R', q1.get());
+    auto q12 = new Transition('1', '0', 'R', q2.get());
     
-    Transition q21('0', '0', 'R', q2.get());
-    Transition q22('1', ' ', 'R', halt.get());
+    auto q21 = new Transition('0', '0', 'R', q2.get());
+    auto q22 = new Transition('1', ' ', 'R', halt.get());
     
     TuringMachine m("0010001", q0.get());
     m.add_state(move(q0));
-    m.find_state("q0")->add_transition(&q01);
-    m.find_state("q0")->add_transition(&q02);
+    m.find_state("q0")->add_transition(unique_ptr<Transition>(q01));
+    m.find_state("q0")->add_transition(unique_ptr<Transition>(q02));
     m.add_state(move(q1));
-    m.find_state("q1")->add_transition(&q11);
-    m.find_state("q1")->add_transition(&q12);
+    m.find_state("q1")->add_transition(unique_ptr<Transition>(q11));
+    m.find_state("q1")->add_transition(unique_ptr<Transition>(q12));
     m.add_state(move(q2));
-    m.find_state("q2")->add_transition(&q21);
-    m.find_state("q2")->add_transition(&q22);
+    m.find_state("q2")->add_transition(unique_ptr<Transition>(q21));
+    m.find_state("q2")->add_transition(unique_ptr<Transition>(q22));
     m.add_state(move(halt));
     
     m.print();

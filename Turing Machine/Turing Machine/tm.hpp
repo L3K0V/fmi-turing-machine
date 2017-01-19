@@ -41,12 +41,12 @@ private:
 class State {
 private:
     string name_;
-    vector<Transition*> transitions_;
+    vector<unique_ptr<Transition>> transitions_;
 public:
     State(const string &name);
     
     string get_name() const;
-    void add_transition(Transition *trans);
+    void add_transition(unique_ptr<Transition>);
     bool is_there_transition(const char &input);
     Transition* find_transition(const char &input);
     friend ostream& operator<<(ostream&, State&);
@@ -84,6 +84,7 @@ public:
     bool is_there_state(const string&) const;
     bool is_finished_successfuly() const;
     static TuringMachine load_machine(const string&);
+    static TuringMachine* while_over(TuringMachine*, Transition*);
     
     void step();
     void run();

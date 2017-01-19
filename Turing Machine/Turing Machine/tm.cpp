@@ -72,13 +72,13 @@ ostream& operator<<(ostream& out, Tape &tape) {
 
 State::State(const string &name) : name_(name) {}
 
-void State::add_transition(Transition *trans) {
-    transitions_.push_back(trans);
+void State::add_transition(unique_ptr<Transition> trans) {
+    transitions_.push_back(move(trans));
 }
 
 bool State::is_there_transition(const char &input) {
-    for (vector<Transition*>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
-        if ((*it)->get_read_symbol() == input) {
+    for (vector<unique_ptr<Transition>>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
+        if ((*it).get()->get_read_symbol() == input) {
             return true;
         }
     }
@@ -86,8 +86,8 @@ bool State::is_there_transition(const char &input) {
 }
 
 Transition* State::find_transition(const char &input) {
-    for (vector<Transition*>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
-        Transition *t = *it;
+    for (vector<unique_ptr<Transition>>::iterator it = transitions_.begin() ; it != transitions_.end(); ++it) {
+        Transition *t = (*it).get();
         if (t->get_read_symbol() == input) {
             return t;
         }
@@ -162,7 +162,7 @@ bool TuringMachine::is_there_state(const string &name) const {
 }
 
 bool TuringMachine::is_finished_successfuly() const {
-    return current_ != nullptr && current_->get_name().compare("halt") == 0;
+    return current_ != nullptr && current_->get_name().compare(HALT.get_name()) == 0;
 }
 
 State* TuringMachine::find_state(const string &name) {
@@ -183,6 +183,9 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
     
     if(ifs.is_open()) {
         string line;
+        
+        // The transision format is: read_symbol{old_state} -> write_symbol{new_state}command
+        // or...                     6{increment} -> 7{decrement}L
         regex e("[{}(\\->)]");
         while (getline(ifs, line)){
             string replaced = std::regex_replace(line, e, " ");
@@ -198,6 +201,7 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
             State *old_state_ptr;
             State *new_state_ptr;
             
+            // If state exist get it, otherwise add new and use it.
             if (tm.find_state(old_state) == nullptr) {
                 old_state_ptr = new State(old_state);
                 tm.add_state(std::unique_ptr<State>(old_state_ptr));
@@ -212,12 +216,22 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
                 new_state_ptr = tm.find_state(new_state);
             }
             
-            old_state_ptr->add_transition(new Transition(read_symbol, write_symbol, command, new_state_ptr));
+            old_state_ptr->add_transition(unique_ptr<Transition>(new Transition(read_symbol, write_symbol, command, new_state_ptr)));
         }
         ifs.close();
     }
     
     return tm;
+}
+
+TuringMachine* loop_over(TuringMachine* machine, Transition* loop) {
+    State* halt_state = machine->find_state(HALT.get_name());
+    
+    if (halt_state != nullptr) {
+        halt_state->add_transition(unique_ptr<Transition>(loop));
+    }
+    
+    return machine;
 }
 
 void TuringMachine::step() {
