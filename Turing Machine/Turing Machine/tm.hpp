@@ -65,7 +65,7 @@ private:
     vector<unique_ptr<Tape>> tapes_;
     string current_state_;
     
-    Transition* find_transition(const char &input);
+    Transition* find_transitions(const char &input);
 public:
     TuringMachine();
 
@@ -75,11 +75,13 @@ public:
     void start_state(const string&);
     
     vector<string> get_states();
+    vector<unique_ptr<Transition>>& get_transitions(const string&);
     
     bool is_finished_successfuly() const;
    
     static TuringMachine load_machine(const string&);
     void loop_over(const string&, Transition*);
+    void compose(TuringMachine*);
     
     void add_transition(unique_ptr<Transition>);
     

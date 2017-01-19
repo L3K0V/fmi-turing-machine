@@ -128,7 +128,7 @@ void TuringMachine::add_transition(unique_ptr<Transition> transition) {
     mapping_[transition.get()->get_current_state()].push_back(std::move(transition));
 }
 
-Transition* TuringMachine::find_transition(const char &input) {
+Transition* TuringMachine::find_transitions(const char &input) {
     
     const auto& transitions = mapping_[current_state_];
     
@@ -147,6 +147,10 @@ vector<string> TuringMachine::get_states() {
     for(auto const& imap: mapping_)
         keys.push_back(imap.first);
     return keys;
+}
+
+vector<unique_ptr<Transition>>& TuringMachine::get_transitions(const string& state) {
+    return mapping_[state];
 }
 
 bool TuringMachine::is_finished_successfuly() const {
@@ -199,9 +203,29 @@ void TuringMachine::loop_over(const string& loop, Transition* halt) {
     add_transition(unique_ptr<Transition>(halt));
 }
 
+void TuringMachine::compose(TuringMachine *another) {
+    auto another_states = another->get_states();
+    
+    for(auto const& state: get_states()) {
+        for (auto const& transition: mapping_[state]) {
+            if (transition->get_next_state().compare("halt") == 0) {
+                transition->change_next_state(another->current_state_);
+            }
+        }
+    }
+    
+    for (const auto& state : another_states) {
+        const auto& another_trans = another->get_transitions(state);
+        
+        for (auto& trans : another_trans) {
+            mapping_[state].push_back(unique_ptr<Transition>(trans.get()));
+        }
+    }
+}
+
 void TuringMachine::step() {
     
-    Transition *next = find_transition(tapes_[0]->read());
+    Transition *next = find_transitions(tapes_[0]->read());
     
     if (nullptr == next) {
         current_state_ = "";
@@ -218,6 +242,8 @@ void TuringMachine::step() {
             tapes_[0]->move_left();
             break;
     }
+    
+    cout << *next << endl;
     
      current_state_ = next->get_next_state();
 }
