@@ -23,6 +23,12 @@ Tape::Tape(const string &input) {
     right_.pop_back();
 }
 
+Tape::Tape(const Tape &other) {
+    left_ = other.left_;
+    right_ = other.right_;
+    current_ = other.current_;
+}
+
 void Tape::move_left() {
     right_.push_back(current_);
     if (left_.empty()) {
@@ -75,6 +81,14 @@ Transition::Transition(const string& current_state, char read, char write, char 
     current_state_(current_state), read_(read), write_(write), command_(command), next_state_(next_state)
 {}
 
+Transition::Transition(const Transition &other) {
+    current_state_ = other.current_state_;
+    read_ = other.read_;
+    write_ = other.write_;
+    next_state_ = other.next_state_;
+    command_ = other.command_;
+}
+
 char Transition::get_command() const {
     return command_;
 }
@@ -106,6 +120,20 @@ ostream& operator<<(ostream& out, Transition &transition) {
 
 TuringMachine::TuringMachine() : current_state_("halt")
 {}
+
+TuringMachine::TuringMachine(const TuringMachine &other) {
+    current_state_ = other.current_state_;
+    
+    for (const auto& e : other.tapes_) {
+        tapes_.push_back(make_unique<Tape>(*e));
+    }
+    
+    for (const auto& imap: other.mapping_) {
+        for (const auto& itrans: imap.second) {
+             mapping_[imap.first].push_back(make_unique<Transition>(*itrans));
+        }
+    }
+}
 
 void TuringMachine::add_tape(unique_ptr<Tape> tape) {
     tapes_.push_back(std::move(tape));
@@ -203,22 +231,22 @@ void TuringMachine::loop_over(const string& loop, Transition* halt) {
     add_transition(unique_ptr<Transition>(halt));
 }
 
-void TuringMachine::compose(TuringMachine *another) {
-    auto another_states = another->get_states();
+void TuringMachine::compose(TuringMachine another) {
+    auto another_states = another.get_states();
     
     for(auto const& state: get_states()) {
         for (auto const& transition: mapping_[state]) {
             if (transition->get_next_state().compare("halt") == 0) {
-                transition->change_next_state(another->current_state_);
+                transition->change_next_state(another.current_state_);
             }
         }
     }
     
     for (const auto& state : another_states) {
-        const auto& another_trans = another->get_transitions(state);
+        const auto& another_trans = another.get_transitions(state);
         
-        for (auto& trans : another_trans) {
-            mapping_[state].push_back(unique_ptr<Transition>(trans.get()));
+        for (const auto& trans : another_trans) {
+            mapping_[state].push_back(make_unique<Transition>(*trans));
         }
     }
 }

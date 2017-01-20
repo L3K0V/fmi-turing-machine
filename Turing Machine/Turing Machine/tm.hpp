@@ -25,6 +25,7 @@ public:
     const static char EMPTY = ' ';
     
     Tape(const string &);
+    Tape(const Tape&);
     
     void move_left();
     void move_right();
@@ -47,6 +48,7 @@ private:
     string next_state_;
 public:
     Transition(const string& current_state, char, char, char, const string& next_state);
+    Transition(const Transition&);
     
     char get_command() const;
     char get_write_symbol() const;
@@ -68,6 +70,7 @@ private:
     Transition* find_transitions(const char &input);
 public:
     TuringMachine();
+    TuringMachine(const TuringMachine&);
 
     void add_tape(unique_ptr<Tape>);
     Tape* get_tape(int index);
@@ -81,12 +84,17 @@ public:
    
     static TuringMachine load_machine(const string&);
     void loop_over(const string&, Transition*);
-    void compose(TuringMachine*);
+    void compose(TuringMachine);
     
     void add_transition(unique_ptr<Transition>);
     
     void step();
     void run();
     void print();
+    
+    template<typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args) {
+        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
 };
 #endif /* tm_hpp */
