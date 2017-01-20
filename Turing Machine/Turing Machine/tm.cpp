@@ -77,7 +77,7 @@ ostream& operator<<(ostream& out, Tape &tape) {
 
 
 
-Transition::Transition(const string& current_state, char read, char write, char command, const string& next_state) :
+Transition::Transition(const string& current_state, const string& read, const string& write, const string& command, const string& next_state) :
     current_state_(current_state), read_(read), write_(write), command_(command), next_state_(next_state)
 {}
 
@@ -89,16 +89,16 @@ Transition::Transition(const Transition &other) {
     command_ = other.command_;
 }
 
-char Transition::get_command() const {
-    return command_;
+char Transition::get_command(int tape = 0) const {
+    return tape > command_.size() - 1 ? '\0' : command_[tape];
 }
 
-char Transition::get_read_symbol() const {
-    return read_;
+char Transition::get_read_symbol(int tape = 0) const {
+    return tape > read_.size() - 1 ? '\0' :read_[tape];
 }
 
-char Transition::get_write_symbol() const {
-    return write_;
+char Transition::get_write_symbol(int tape = 0) const {
+    return tape > write_.size() - 1 ? '\0' :write_[tape];
 }
 
 string Transition::get_next_state() const {
@@ -200,15 +200,15 @@ TuringMachine TuringMachine::load_machine(const string &filename) {
         while (getline(ifs, line)){
             string replaced = std::regex_replace(line, e, " ");
             
-            char read_symbol, write_symbol;
+            string read_symbols, write_symbols;
             string old_state, new_state;
-            char command;
+            string command;
             
             stringstream ss(replaced);
             
-            ss >> read_symbol >> old_state >> write_symbol >> new_state >> command;
+            ss >> read_symbols >> old_state >> write_symbols >> new_state >> command;
             
-            tm.add_transition(unique_ptr<Transition>(new Transition(old_state, read_symbol, write_symbol, command, new_state)));
+            tm.add_transition(unique_ptr<Transition>(new Transition(old_state, read_symbols, write_symbols, command, new_state)));
         }
         ifs.close();
     }
@@ -260,15 +260,19 @@ void TuringMachine::step() {
         return;
     }
     
-    tapes_[0]->write(next->get_write_symbol());
-    
-    switch (next->get_command()) {
-        case 'R':
-            tapes_[0]->move_right();
-            break;
-        case 'L':
-            tapes_[0]->move_left();
-            break;
+    for (int t = 0; t < tapes_.size(); ++t) {
+        if (tapes_[t]->read() == next->get_read_symbol(t) && next->get_write_symbol(t) != '\0') {
+            tapes_[t]->write(next->get_write_symbol(t));
+        }
+        
+        switch (next->get_command(t)) {
+            case 'R':
+                tapes_[t]->move_right();
+                break;
+            case 'L':
+                tapes_[t]->move_left();
+                break;
+        }
     }
     
     cout << *next << endl;

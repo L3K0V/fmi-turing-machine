@@ -16,7 +16,7 @@ SCENARIO("Try simple rewrite single char of the tape") {
         TuringMachine m;
         m.start_state("start");
         m.add_tape(unique_ptr<Tape>(new Tape("00000")));
-        m.add_transition(unique_ptr<Transition>(new Transition("start", '0', 'X', 'R', "halt")));
+        m.add_transition(unique_ptr<Transition>(new Transition("start", "0", "X", "R", "halt")));
         
         WHEN("check tape value") {
             
@@ -51,8 +51,8 @@ SCENARIO("Try loop over machine rewriting zeros values with X") {
         TuringMachine m;
         m.start_state("start");
         m.add_tape(unique_ptr<Tape>(new Tape("00001")));
-        m.add_transition(unique_ptr<Transition>(new Transition("start", '0', 'X', 'R', "halt")));
-        m.loop_over("start", new Transition("start", '1', '1', 'N', "halt"));
+        m.add_transition(unique_ptr<Transition>(new Transition("start", "0", "X", "R", "halt")));
+        m.loop_over("start", new Transition("start", "1", "1", "N", "halt"));
         
         WHEN("Start the machine") {
             m.run();

@@ -41,18 +41,19 @@ private:
 
 class Transition {
 private:
-    char read_;
-    char write_;
-    char command_;
+    string read_;
+    string write_;
+    string command_;
     string current_state_;
     string next_state_;
+    
 public:
-    Transition(const string& current_state, char, char, char, const string& next_state);
+    Transition(const string& current_state, const string&, const string&, const string&, const string& next_state);
     Transition(const Transition&);
     
-    char get_command() const;
-    char get_write_symbol() const;
-    char get_read_symbol() const;
+    char get_command(int) const;
+    char get_write_symbol(int) const;
+    char get_read_symbol(int) const;
     string get_next_state() const;
     string get_current_state() const;
     
