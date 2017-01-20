@@ -23,20 +23,24 @@ class Tape {
 public:
     
     const static char EMPTY = ' ';
+    const static char DELIMITER = '#';
     
     Tape(const string &);
     Tape(const Tape&);
     
-    void move_left();
-    void move_right();
+    void move_left(int = -1);
+    void move_right(int = -1);
     
-    char read() const;
-    void write(char);
+    char read(int = -1) const;
+    void write(char, int = -1);
     friend ostream& operator<<(ostream&, Tape&);
 private:
+    vector<Tape> virtual_tapes_;
     vector<char> left_;
     vector<char> right_;
-    char current_;
+    char current_ = '\0';
+    
+    void initialize(const string&);
 };
 
 class Transition {
@@ -52,8 +56,14 @@ public:
     Transition(const Transition&);
     
     char get_command(int) const;
+    string get_command() const;
+    
     char get_write_symbol(int) const;
+    string get_write_symbols() const;
+    
     char get_read_symbol(int) const;
+    string get_read_symbols() const;
+    
     string get_next_state() const;
     string get_current_state() const;
     
@@ -86,6 +96,7 @@ public:
     static TuringMachine load_machine(const string&);
     void loop_over(const string&, Transition*);
     void compose(TuringMachine);
+    void to_single_tape();
     
     void add_transition(unique_ptr<Transition>);
     

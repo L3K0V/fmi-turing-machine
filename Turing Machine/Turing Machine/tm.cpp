@@ -12,10 +12,35 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <string>
 
 const char Tape::EMPTY;
 
 Tape::Tape(const string &input) {
+    
+    if (input[0] == DELIMITER) {
+        // Multiple tapes so...
+        stringstream ss(input);
+        string item;
+        while (getline(ss, item, DELIMITER)) {
+            
+            if (item.empty()) {
+                continue;
+            }
+            
+            if (current_ == '\0') {
+                initialize(item);
+            } else {
+                virtual_tapes_.push_back(Tape(item));
+            }
+        }
+        return;
+    }
+    
+    initialize(input);
+}
+
+void Tape::initialize(const string &input) {
     for (int e = (int) (input.length() - 1); e >= 0; --e) {
         right_.push_back(input[e]);
     }
@@ -27,9 +52,17 @@ Tape::Tape(const Tape &other) {
     left_ = other.left_;
     right_ = other.right_;
     current_ = other.current_;
+    virtual_tapes_ = other.virtual_tapes_;
 }
 
-void Tape::move_left() {
+void Tape::move_left(int index) {
+    
+    // Handle moving left of virtual tape
+    if (index != -1 && index < virtual_tapes_.size()) {
+        virtual_tapes_[index].move_left();
+        return;
+    }
+    
     right_.push_back(current_);
     if (left_.empty()) {
         left_.push_back(EMPTY);
@@ -38,7 +71,14 @@ void Tape::move_left() {
     left_.pop_back();
 }
 
-void Tape::move_right() {
+void Tape::move_right(int index) {
+    
+    // Handle moving right of virtual tape
+    if (index != -1 && index < virtual_tapes_.size()) {
+        virtual_tapes_[index].move_right();
+        return;
+    }
+    
     left_.push_back(current_);
     if (right_.empty()) {
         right_.push_back(EMPTY);
@@ -47,15 +87,31 @@ void Tape::move_right() {
     right_.pop_back();
 }
 
-void Tape::write(char symbol) {
+void Tape::write(char symbol, int index) {
+    
+    // Handle write of virtual tape
+    if (index != -1 && index < virtual_tapes_.size()) {
+        virtual_tapes_[index].write(symbol);
+        return;
+    }
+    
     current_ = symbol;
 }
 
-char Tape::read() const {
+char Tape::read(int index) const {
+    
+    if (index != -1 && index < virtual_tapes_.size()) {
+        return virtual_tapes_[index].read();
+    }
+    
     return current_;
 }
 
 ostream& operator<<(ostream& out, Tape &tape) {
+    
+    if (tape.virtual_tapes_.size() > 0) {
+        cout << '#';
+    }
    
     for (vector<char>::iterator it = tape.left_.begin(); it != tape.left_.end(); ++it) {
         if ((*it) != Tape::EMPTY) {
@@ -72,6 +128,12 @@ ostream& operator<<(ostream& out, Tape &tape) {
             out << *it;
         }
     }
+    
+    for (auto tape : tape.virtual_tapes_) {
+        out << '#';
+        out << tape;
+    }
+    
     return out;
 }
 
@@ -93,12 +155,24 @@ char Transition::get_command(int tape = 0) const {
     return tape > command_.size() - 1 ? '\0' : command_[tape];
 }
 
+string Transition::get_command() const {
+    return command_;
+}
+
 char Transition::get_read_symbol(int tape = 0) const {
     return tape > read_.size() - 1 ? '\0' :read_[tape];
 }
 
+string Transition::get_read_symbols() const {
+    return read_;
+}
+
 char Transition::get_write_symbol(int tape = 0) const {
     return tape > write_.size() - 1 ? '\0' :write_[tape];
+}
+
+string Transition::get_write_symbols() const {
+    return write_;
 }
 
 string Transition::get_next_state() const {
@@ -251,12 +325,50 @@ void TuringMachine::compose(TuringMachine another) {
     }
 }
 
+void TuringMachine::to_single_tape() {
+    if (tapes_.size() == 1) {
+        return;
+    }
+    
+    stringstream ss("", ios_base::app | ios_base::out);
+    
+    for (const auto &tape : tapes_) {
+        ss << '#';
+        ss << *tape;
+    }
+    
+    tapes_.erase(tapes_.begin(), tapes_.end());
+    Tape* tape = new Tape(ss.str());
+    add_tape(make_unique<Tape>(*tape));
+}
+
 void TuringMachine::step() {
     
     Transition *next = find_transitions(tapes_[0]->read());
     
     if (nullptr == next) {
         current_state_ = "";
+        return;
+    }
+    
+    cout << *next << endl;
+    current_state_ = next->get_next_state();
+    
+    if (tapes_.size() == 1) {
+        for (int r = 0, t = -1; r < next->get_read_symbols().size(); ++t, ++r) {
+            if (tapes_[0]->read(t) == next->get_read_symbols()[r] && next->get_write_symbol(r) != '\0') {
+                tapes_[0]->write(next->get_write_symbol(r), t);
+            }
+            
+            switch (next->get_command(t)) {
+                case 'R':
+                    tapes_[0]->move_right(t);
+                    break;
+                case 'L':
+                    tapes_[0]->move_left(t);
+                    break;
+            }
+        }
         return;
     }
     
@@ -274,10 +386,6 @@ void TuringMachine::step() {
                 break;
         }
     }
-    
-    cout << *next << endl;
-    
-     current_state_ = next->get_next_state();
 }
 
 void TuringMachine::run() {

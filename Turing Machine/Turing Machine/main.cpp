@@ -12,8 +12,23 @@ using namespace std;
 
 int main(int argc, const char * argv[]) {
     
+    Tape t("#0001#0000#0000");
+    t.write('X');
+    t.move_right(0);
+    t.write('X', 0);
+    t.move_right(1);
+    t.write('X', 1);
+    
+    cout << t << endl;
+    
     TuringMachine tm;
     tm.add_tape(unique_ptr<Tape>(new Tape("0001")));
+    tm.add_tape(unique_ptr<Tape>(new Tape("0000")));
+    
+    tm.to_single_tape();
+    
+    tm.print();
+    
     tm.start_state("start");
     tm.add_transition(unique_ptr<Transition>(new Transition("start", "0", "0", "R", "halt")));
 //    tm.add_transition(unique_ptr<Transition>(new Transition("start", '1', 'X', 'R', "halt")));
