@@ -57,11 +57,40 @@ SCENARIO("Try loop over machine rewriting zeros values with X") {
         WHEN("Start the machine") {
             m.run();
             
+            m.print();
+            
             THEN("All zeros must be replaces by X") {
                 std::stringstream sstream;
                 sstream << *m.get_tape(0);
                 
                 REQUIRE(sstream.str().compare("XXXX1") == 0);
+            }
+        }
+    }
+}
+
+SCENARIO("Convert multiple to single tape machine") {
+    GIVEN("Multiple tape machine") {
+        TuringMachine m;
+        m.add_tape(unique_ptr<Tape>(new Tape("1010")));
+        m.add_tape(unique_ptr<Tape>(new Tape("0000")));
+        m.add_tape(unique_ptr<Tape>(new Tape("0000")));
+        m.start_state("start");
+        
+        m.add_transition(unique_ptr<Transition>(new Transition("start", "100", "1X0", "RRR", "next")));
+        m.add_transition(unique_ptr<Transition>(new Transition("next", "000", "00X", "RRR", "halt")));
+        
+        WHEN("Convert the machine to single tape") {
+            m.run();
+            m.print();
+            m.to_single_tape();
+            m.print();
+            
+            THEN("The tape must be compined") {
+                std::stringstream sstream;
+                sstream << *m.get_tape(0);
+                
+                REQUIRE(sstream.str().compare("#1010#X000#0X00") == 0);
             }
         }
     }

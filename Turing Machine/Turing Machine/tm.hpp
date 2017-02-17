@@ -299,6 +299,11 @@ public:
     //
     void print();
     
+    //
+    // Save tapes to file using given filename
+    //
+    void save_tapes(const string&);
+    
     // Implementation of C++ 14
     template<typename T, typename... Args>
     std::unique_ptr<T> make_unique(Args&&... args) {

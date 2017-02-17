@@ -360,7 +360,7 @@ void TuringMachine::step() {
                 tapes_[0]->write(next->get_write_symbol(r), t);
             }
             
-            switch (next->get_command(t)) {
+            switch (next->get_command(r)) {
                 case 'R':
                     tapes_[0]->move_right(t);
                     break;
@@ -395,5 +395,21 @@ void TuringMachine::run() {
 }
 
 void TuringMachine::print() {
-    cout << *tapes_[0] << endl;
+    for (const auto& tape: tapes_) {
+        cout << *tape << endl;
+    }
+}
+
+void TuringMachine::save_tapes(const string &filename) {
+    ofstream ofs;
+    ofs.open(filename, ios_base::app | ios_base::out);
+    
+    if (ofs.is_open()) {
+        for (const auto& tape: tapes_) {
+            ofs << *tape << endl;
+        }
+        
+        ofs.flush();
+        ofs.close();
+    }
 }
